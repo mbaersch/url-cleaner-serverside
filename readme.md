@@ -1,5 +1,5 @@
-# url-cleaner
-Custom Variable Template for server-side Google Tag Manager. URL cleanup with black- or whitelisting for parameters and optional value redaction with regexes 
+# URL Cleaner (url-cleaner-server)
+Custom Variable Template for **server-side** Google Tag Manager. URL cleanup with black- or whitelisting for parameters and optional value redaction with regexes 
 
 **Note**: this template does not need any permissions. 
 
