@@ -1,4 +1,4 @@
-﻿___TERMS_OF_SERVICE___
+___TERMS_OF_SERVICE___
 
 By creating or modifying this file you agree to Google Tag Manager's Community
 Template Gallery Developer Terms of Service available at
@@ -14,7 +14,7 @@ ___INFO___
   "version": 1,
   "securityGroups": [],
   "displayName": "URL Cleaner",
-  "description": "",
+  "description": "parses URLs and keeps only whitelisted or removes blacklisted parameters. Returns new full url, path or redacted query string only (optionally transformed to lower case)",
   "containerContexts": [
     "SERVER"
   ]
@@ -116,7 +116,7 @@ ___TEMPLATE_PARAMETERS___
       {
         "type": "SIMPLE_TABLE",
         "name": "blacklistParams",
-        "displayName": "Parameter Whitelist Table",
+        "displayName": "Parameter Blacklist Table",
         "simpleTableColumns": [
           {
             "defaultValue": "",
@@ -227,6 +227,7 @@ ___TEMPLATE_PARAMETERS___
     "alwaysInSummary": true
   }
 ]
+
 
 ___SANDBOXED_JS_FOR_SERVER___
 
@@ -349,5 +350,3 @@ setup: |-
 ___NOTES___
 
 Created on 12.6.2022, 18:33:14
-
-
