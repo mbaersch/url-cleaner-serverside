@@ -2,9 +2,11 @@ homepage: "https://www.markus-baersch.de"
 documentation: "https://github.com/mbaersch/url-cleaner-server#readme"
 versions:
   # Latest version   
+  - sha: e59b587fe26b48563a43c3da64d1c09fc239ca38
+    changeNotes: added special matching option for parameter names in redaction feature 
+  # Older versions
   - sha: 9b0d4fc77296c268c5c7ae8981fad5537010be4f
     changeNotes: UI fix (no functional changes)
-  # Older versions
   - sha: 6a9b159b53d598d37a671057f8d9698a3f03ac2f
     changeNotes: added regex and partial match for list items.
   - sha: bf81fa3c325ecd4b552370f99b77ed1d879033b4
