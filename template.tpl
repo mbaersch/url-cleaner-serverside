@@ -234,9 +234,24 @@ ___SANDBOXED_JS_FOR_SERVER___
 var Object = require("Object");
 var parseUrl = require("parseUrl");
 
+const makeParamList = function(lst) {
+  var res = [];
+  for (var i=0;i<lst.length;i++) {
+    var x = lst[i].paramName;
+    if (x.indexOf(",") >= 0) {
+        var iList = x.split(",").map(s => s.trim());
+        res = res.concat(iList);
+    } else res.push(x);
+  }
+  return res;   
+};
+
+
 var lm = data.listMethod || "whitelist";
-var wList = (lm === "whitelist") && data.whitelistParams ? data.whitelistParams.map(function(item){return item.paramName.toLowerCase();}) : [];
-var bList = (lm === "blacklist") && data.blacklistParams ? data.blacklistParams.map(function(item){return item.paramName.toLowerCase();}) : [];
+var wList = (lm === "whitelist") && data.whitelistParams ? makeParamList(data.whitelistParams) : [];
+var bList = (lm === "blacklist") && data.blacklistParams ? makeParamList(data.blacklistParams) : [];
+
+require("logToConsole")(wList);
 
 var inUrl = parseUrl(data.fullUrl);
 const sp = inUrl.searchParams;
@@ -281,6 +296,30 @@ if (data.lowercaseUrl === true) {
 if (data.resultFormat === "paramsOnly") return cleanQuery;
 if (data.resultFormat === "pageOnly") return pth + cleanQuery;
 return inUrl.protocol + "//" + hst + pth + cleanQuery;
+
+
+___SERVER_PERMISSIONS___
+
+[
+  {
+    "instance": {
+      "key": {
+        "publicId": "logging",
+        "versionId": "1"
+      },
+      "param": [
+        {
+          "key": "environments",
+          "value": {
+            "type": 1,
+            "string": "debug"
+          }
+        }
+      ]
+    },
+    "isRequired": true
+  }
+]
 
 
 ___TESTS___
@@ -341,6 +380,28 @@ scenarios:
 
     let variableResult = runCode(mockData);
     assertThat(variableResult).isEqualTo("https://www.example.com/page.html?autm_tk=check2&fbclid=something&foo=bar");
+- name: Special Functions - Whitelist, Comma Separated Value As List Item
+  code: |-
+    mockData.whitelistParams = [{paramName: "utm_"}, {paramName: "test1, test2, test3"}];
+    mockData.fullUrl = "https://WWW.example.com/page.html?utm_medium=test&utm_source=check&foo=bar&test1=stay1&test2=stay2&test3=stay3";
+    mockData.lowercaseUrl = true;
+    mockData.useRegex = true;
+
+    let variableResult = runCode(mockData);
+    assertThat(variableResult).isEqualTo("https://www.example.com/page.html?utm_medium=test&utm_source=check&test1=stay1&test2=stay2&test3=stay3");
+- name: Special Functions - Use Param Name to Redact Value
+  code: |-
+    mockData.listMethod = "blacklist";
+    mockData.blacklistParams = [];
+    mockData.fullUrl = "https://WWW.example.com/page.html?utm_medium=test&utm_source=check&foo=bar&test1=stay1&test2=stay2&test3=stay3";
+    mockData.lowercaseUrl = true;
+    mockData.useRegex = true;
+    const rp = [{rgx:'%%foo%%'}];
+    mockData.redactValues = true;
+    mockData.redactPatterns = rp;
+
+    let variableResult = runCode(mockData);
+    assertThat(variableResult).isEqualTo("https://www.example.com/page.html?utm_medium=test&utm_source=check&foo=[gone]&test1=stay1&test2=stay2&test3=stay3");
 setup: |-
   const mockData = {
     fullUrl: "https://WWW.example.com/page.html?utm_medium=test&utm_source=check&fbclid=something&foo=bar&RANDOM=email@example.com",
