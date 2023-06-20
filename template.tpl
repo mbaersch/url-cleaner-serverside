@@ -14,6 +14,9 @@ ___INFO___
   "version": 1,
   "securityGroups": [],
   "displayName": "URL Cleaner",
+    "categories": [
+    "UTILITY"
+  ],
   "description": "parses URLs and keeps only whitelisted or removes blacklisted parameters. Returns new full url, path or redacted query string only (optionally transformed to lower case)",
   "containerContexts": [
     "SERVER"
@@ -39,34 +42,31 @@ ___TEMPLATE_PARAMETERS___
   {
     "type": "SELECT",
     "name": "listMethod",
-    "displayName": "List Method",
+    "displayName": "Method",
     "macrosInSelect": false,
     "selectItems": [
       {
         "value": "whitelist",
-        "displayValue": "Whitelist"
+        "displayValue": "Parameter Whitelist"
       },
       {
         "value": "blacklist",
-        "displayValue": "Blacklist"
+        "displayValue": "Parameter Blacklist"
+      },
+      {
+        "value": "path",
+        "displayValue": "Redact Path"
       }
     ],
     "simpleValueType": true,
     "defaultValue": "whitelist",
-    "help": "Switch between parameter whitelisting (all parameters are removed if not listed) or blacklisting (only listed parameters are removed).",
+    "help": "Switch between parameter whitelisting (all parameters are removed if not listed), blacklisting (only listed parameters are removed) or removing certain strings from path information.",
     "valueValidators": [
       {
         "type": "NON_EMPTY"
       }
     ],
     "alwaysInSummary": true
-  },
-  {
-    "type": "CHECKBOX",
-    "name": "useRegex",
-    "checkboxText": "Allow Partial Match And RegEx",
-    "simpleValueType": true,
-    "help": "Check to use partial match (\"utm_\" would catch \"utm_medium\" and \"utm_source\" as well as \"autm_tk\") or regular expressions in your list.\n\nIf not active, parameters must match a list entry (not case-sensitive)."
   },
   {
     "type": "GROUP",
@@ -138,6 +138,13 @@ ___TEMPLATE_PARAMETERS___
   },
   {
     "type": "CHECKBOX",
+    "name": "useRegex",
+    "checkboxText": "Allow Partial Match And RegEx",
+    "simpleValueType": true,
+    "help": "Check to use partial match (\"utm_\" would catch \"utm_medium\" and \"utm_source\" as well as \"autm_tk\") or regular expressions in your list.\n\nIf not active, parameters must match a list entry (not case-sensitive)."
+  },
+  {
+    "type": "CHECKBOX",
     "name": "lowercaseUrl",
     "checkboxText": "Transform To Lowercase",
     "simpleValueType": true,
@@ -149,7 +156,14 @@ ___TEMPLATE_PARAMETERS___
     "checkboxText": "Redact Values",
     "simpleValueType": true,
     "alwaysInSummary": false,
-    "help": "Optional redaction of remaining parameter values with regex patterns."
+    "help": "Optional redaction of remaining parameter values with regex patterns.",
+    "enablingConditions": [
+      {
+        "paramName": "listMethod",
+        "paramValue": "path",
+        "type": "NOT_EQUALS"
+      }
+    ]
   },
   {
     "type": "GROUP",
@@ -160,7 +174,14 @@ ___TEMPLATE_PARAMETERS___
       {
         "type": "LABEL",
         "name": "infoRegex",
-        "displayName": "Add one or multiple rows with regex expressions to apply to all remaining parameter values. Matching strings will be replaced with [REDACTED]."
+        "displayName": "Add one or multiple rows with regex expressions to apply to all remaining parameter values. Matching strings will be replaced with [REDACTED].",
+        "enablingConditions": [
+          {
+            "paramName": "listMethod",
+            "paramValue": "path",
+            "type": "NOT_EQUALS"
+          }
+        ]
       },
       {
         "type": "SIMPLE_TABLE",
@@ -194,6 +215,11 @@ ___TEMPLATE_PARAMETERS___
       {
         "paramName": "redactValues",
         "paramValue": true,
+        "type": "EQUALS"
+      },
+      {
+        "paramName": "listMethod",
+        "paramValue": "path",
         "type": "EQUALS"
       }
     ]
@@ -251,40 +277,61 @@ var lm = data.listMethod || "whitelist";
 var wList = (lm === "whitelist") && data.whitelistParams ? makeParamList(data.whitelistParams) : [];
 var bList = (lm === "blacklist") && data.blacklistParams ? makeParamList(data.blacklistParams) : [];
 
-require("logToConsole")(wList);
-
 var inUrl = parseUrl(data.fullUrl);
-const sp = inUrl.searchParams;
 var cleanParams = [];
-
-for(var prm of Object.entries(sp)) {
-  var k = prm[0] || "";
-  var vl = prm.length > 1 ? prm[1] : "";
-  var keepParam = 
-      lm === "whitelist" ? 
-        (data.useRegex ? wList.some(function(pat) {return k.match(pat);}) : ( wList.indexOf(k.toLowerCase()) >= 0)) 
-      : 
-        (data.useRegex ? !bList.some(function(pat) {return k.match(pat);}) : ( bList.indexOf(k.toLowerCase()) < 0)); 
-  
-  if (keepParam === true) { 
-    if (data.redactValues === true && data.redactPatterns && data.redactPatterns.length > 0) {
-      data.redactPatterns.forEach(pat => {
-        const redactInfo = vl.match(pat.rgx);
-        if(redactInfo) vl = vl.replace(redactInfo, data.redactReplacement);
-        else 
-          if ((pat.rgx.substring(0,2) === "%%") && 
-              (pat.rgx.substring(pat.rgx.length-2) === "%%") && 
-              ("%%" + k.toLowerCase() + "%%"  === pat.rgx))
-            vl = data.redactReplacement;                     
-      });
-    }
-    cleanParams.push(prm[0]+"="+vl);
-  }
-}
-
+var cleanQuery = ""; 
 var hst = inUrl.hostname;
 var pth = inUrl.pathname;
-var cleanQuery = cleanParams.join('&');
+
+if (lm === "path") {
+  //do not touch parameters and adjust path only
+  var cleanQuery = (inUrl.search || "?").substring(1); 
+
+  var cleanPathArray = pth.split('/');
+  var pthArray = pth.split('/');
+  if (data.redactPatterns && data.redactPatterns.length > 0) {
+    cleanPathArray = [];
+    pthArray.forEach(x => {
+      data.redactPatterns.forEach(pat => {
+        const redactInfo = x.match(pat.rgx);
+        if(redactInfo) x = x.replace(redactInfo, data.redactReplacement);
+      });
+      cleanPathArray.push(x);
+    });    
+  }
+  pth = cleanPathArray.join('/');
+  
+} else {
+
+  const sp = inUrl.searchParams;
+
+  for(var prm of Object.entries(sp)) {
+    var k = prm[0] || "";
+    var vl = prm.length > 1 ? prm[1] : "";
+    var keepParam = 
+        lm === "whitelist" ? 
+          (data.useRegex ? wList.some(function(pat) {return k.match(pat);}) : (   wList.indexOf(k.toLowerCase()) >= 0)) 
+        : 
+          (data.useRegex ? !bList.some(function(pat) {return k.match(pat);}) : ( bList.indexOf(k.toLowerCase()) < 0)); 
+  
+    if (keepParam === true) { 
+      if (data.redactValues === true && data.redactPatterns && data.redactPatterns.length > 0) {
+        data.redactPatterns.forEach(pat => {
+          const redactInfo = vl.match(pat.rgx);
+          if(redactInfo) vl = vl.replace(redactInfo, data.redactReplacement);
+          else 
+            if ((pat.rgx.substring(0,2) === "%%") && 
+                (pat.rgx.substring(pat.rgx.length-2) === "%%") && 
+                ("%%" + k.toLowerCase() + "%%"  === pat.rgx))
+              vl = data.redactReplacement;                     
+        });
+      }
+      cleanParams.push(prm[0]+"="+vl);
+    }
+  }
+  cleanQuery = cleanParams.join('&');
+}  
+
 if (cleanQuery.length > 0) cleanQuery = '?' + cleanQuery;
 
 if (data.lowercaseUrl === true) {
@@ -296,30 +343,6 @@ if (data.lowercaseUrl === true) {
 if (data.resultFormat === "paramsOnly") return cleanQuery;
 if (data.resultFormat === "pageOnly") return pth + cleanQuery;
 return inUrl.protocol + "//" + hst + pth + cleanQuery;
-
-
-___SERVER_PERMISSIONS___
-
-[
-  {
-    "instance": {
-      "key": {
-        "publicId": "logging",
-        "versionId": "1"
-      },
-      "param": [
-        {
-          "key": "environments",
-          "value": {
-            "type": 1,
-            "string": "debug"
-          }
-        }
-      ]
-    },
-    "isRequired": true
-  }
-]
 
 
 ___TESTS___
