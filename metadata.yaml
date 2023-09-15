@@ -3,9 +3,11 @@ documentation: "https://github.com/mbaersch/url-cleaner-server#readme"
 versions:
 
   # Latest version   
+  - sha: bc9e45f0ca22000bfa478e4837c17cb876273b69
+    changeNotes: fixed case sensitivity for param names
+  # Older versions
   - sha: 5cfdae90c59a6ac8c388b7b3617778f36ab7f8a4
     changeNotes: added new option "Redact Path" 
-  # Older versions
   - sha: 3f5db9432d17050bf228c4b874e617db3d5f7702
     changeNotes: enabled use of comma-separated lists of parameter names in a single list item for black- and whitelists  
   - sha: e59b587fe26b48563a43c3da64d1c09fc239ca38
