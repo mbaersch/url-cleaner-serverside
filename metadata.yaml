@@ -1,7 +1,6 @@
 homepage: "https://www.markus-baersch.de"
 documentation: "https://github.com/mbaersch/url-cleaner-server#readme"
 versions:
-
   # Latest version   
   - sha: bc9e45f0ca22000bfa478e4837c17cb876273b69
     changeNotes: fixed case sensitivity for param names
