@@ -14,10 +14,7 @@ ___INFO___
   "version": 1,
   "securityGroups": [],
   "displayName": "URL Cleaner",
-    "categories": [
-    "UTILITY"
-  ],
-  "description": "parses URLs and keeps only whitelisted or removes blacklisted parameters. Returns new full url, path or redacted query string only (optionally transformed to lower case)",
+  "description": "Parse URLs and keep only whitelisted or remove blacklisted parameters. Variable returns new full URL, path or redacted query string only (optionally transformed to lower case)",
   "containerContexts": [
     "SERVER"
   ]
@@ -310,9 +307,9 @@ if (lm === "path") {
     var vl = prm.length > 1 ? prm[1] : "";
     var keepParam = 
         lm === "whitelist" ? 
-          (data.useRegex ? wList.some(function(pat) {return k.match(pat);}) : (   wList.indexOf(k) >= 0)) 
+          (data.useRegex ? wList.some(function(pat) {return k.match(pat);}) : (   wList.indexOf(k.toLowerCase()) >= 0)) 
         : 
-          (data.useRegex ? !bList.some(function(pat) {return k.match(pat);}) : ( bList.indexOf(k) < 0)); 
+          (data.useRegex ? !bList.some(function(pat) {return k.match(pat);}) : ( bList.indexOf(k.toLowerCase()) < 0)); 
   
     if (keepParam === true) { 
       if (data.redactValues === true && data.redactPatterns && data.redactPatterns.length > 0) {

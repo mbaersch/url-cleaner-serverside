@@ -4,7 +4,7 @@
 
 URL cleanup with black- or whitelisting for parameters and optional value redaction with regexes 
 
-![Template Status](https://img.shields.io/badge/Community%20Template%20Gallery%20Status-submitted-orange) ![Repo Size](https://img.shields.io/github/repo-size/mbaersch/url-cleaner-server) ![License](https://img.shields.io/github/license/mbaersch/url-cleaner-server)
+![Template Status](https://img.shields.io/badge/Community%20Template%20Gallery%20Status-submitted-orange) ![Repo Size](https://img.shields.io/github/repo-size/mbaersch/url-cleaner-serverside) ![License](https://img.shields.io/github/license/mbaersch/url-cleaner-serverside)
 
 ---
 
