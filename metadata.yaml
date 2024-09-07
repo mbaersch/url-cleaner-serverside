@@ -2,5 +2,5 @@ homepage: "https://www.markus-baersch.de"
 documentation: "https://github.com/mbaersch/url-cleaner-serverside#readme"
 versions:
   # Latest version   
-  - sha: 8d72cf7918fd297bea81da93e278adc4b840d0e9
+  - sha: e65949fce4946c7324c0487eabc6198fbb94fe55
     changeNotes: Initial release.
