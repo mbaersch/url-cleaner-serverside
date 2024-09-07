@@ -14,7 +14,9 @@ ___INFO___
   "version": 1,
   "securityGroups": [],
   "displayName": "URL Cleaner",
-  "categories": ["UTILITY"],
+  "categories": [
+    "UTILITY"
+  ],
   "description": "Parse URLs and keep only whitelisted or remove blacklisted parameters. Variable returns new full URL, path or redacted query string only (optionally transformed to lower case)",
   "containerContexts": [
     "SERVER"
@@ -276,6 +278,9 @@ var wList = (lm === "whitelist") && data.whitelistParams ? makeParamList(data.wh
 var bList = (lm === "blacklist") && data.blacklistParams ? makeParamList(data.blacklistParams) : [];
 
 var inUrl = parseUrl(data.fullUrl);
+
+if (!inUrl) return;
+
 var cleanParams = [];
 var cleanQuery = ""; 
 var hst = inUrl.hostname;
